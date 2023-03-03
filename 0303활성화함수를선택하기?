@@ -1,0 +1,49 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import cross_val_score
+
+# 10개의 무작위 좌표 생성
+X = np.random.rand(10, 1) * 10
+Y = np.random.rand(10, 1) * 10
+
+# 다항 회귀 분석을 사용하여 함수 추정
+scores = []
+degrees = np.arange(1, 10)
+for degree in degrees:
+    model = make_pipeline(PolynomialFeatures(degree), LinearRegression())
+    score = np.abs(cross_val_score(model, X, Y.ravel(), cv=5, scoring='neg_mean_squared_error').mean())
+    scores.append(score)
+
+# 최적의 차수 결정
+optimal_degree = degrees[np.argmin(scores)]
+print("Optimal degree:", optimal_degree)
+
+# 최적의 차수로 다항 회귀 분석 수행
+model = make_pipeline(PolynomialFeatures(optimal_degree), LinearRegression())
+model.fit(X, Y)
+y_pred = model.predict(X)
+
+# 추정된 함수 출력
+print("Estimated Function:", model.named_steps['linearregression'].coef_, model.named_steps['linearregression'].intercept_)
+
+# 시각화
+fig, ax = plt.subplots()
+ax.scatter(X, Y, label='Data')
+ax.plot(X, y_pred, color='red', label='Estimated Function')
+ax.legend()
+
+# 0에서 10까지의 구간에서 추정된 함수 계산
+x_range = np.linspace(0, 10, 100).reshape(-1, 1)
+y_range = model.predict(x_range)
+
+# 시각화
+fig, ax = plt.subplots()
+ax.scatter(X, Y, label='Data')
+ax.plot(X, y_pred, color='red', label='Estimated Function')
+ax.plot(x_range, y_range, color='blue', label='Estimated Function in Range')
+ax.legend()
+
+plt.show()
